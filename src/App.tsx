@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { ConfigPanel } from './components/ConfigPanel';
 import { Editor } from './components/Editor';
 import { FloatingFooter } from './components/Footer';
 import { Header } from './components/Header';
@@ -22,9 +23,8 @@ export default function App() {
   const [initialDraft] = useState(loadDraft);
   const [metadata, setMetadata] = useState<StudentMetadata>(initialDraft.metadata);
   const [text, setText] = useState(initialDraft.text);
-  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
-  const [isMobileConfigOpen, setIsMobileConfigOpen] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
   /**
    * Sauvegarde en temps reel les champs et le texte. L'ecriture localStorage est
@@ -34,17 +34,6 @@ export default function App() {
     const draft: DraftState = { metadata, text };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   }, [metadata, text]);
-
-  /**
-   * Transforme le scroll en etat UI: l'en-tete garde l'identite visible mais
-   * reduit les champs pour liberer davantage de place a la feuille.
-   */
-  useEffect(() => {
-    const updateHeaderState = () => setIsHeaderCollapsed(window.scrollY > 80);
-    updateHeaderState();
-    window.addEventListener('scroll', updateHeaderState, { passive: true });
-    return () => window.removeEventListener('scroll', updateHeaderState);
-  }, []);
 
   const issues = useMemo(
     () => checkText(text, metadata.classLevel, metadata.language),
@@ -87,46 +76,22 @@ export default function App() {
   const exportPdf = () => exportAssignmentPdf(metadata, text);
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-950">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(219,234,254,0.7),transparent_28rem),radial-gradient(circle_at_top_right,rgba(226,232,240,0.95),transparent_24rem)]" />
+    <main className="min-h-screen bg-[#F8FAFC] px-2 py-2 font-sans text-slate-950 md:px-8 md:py-8">
+      <div className="mx-auto max-w-5xl">
+        <Header onReset={resetDraft} onExport={exportPdf} />
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-28 pt-4 sm:px-6 md:pb-12 lg:px-8">
-        <Header
-          metadata={metadata}
-          isCompact={isHeaderCollapsed}
-          isOpen={isMobileConfigOpen}
-          onToggle={() => setIsMobileConfigOpen((isOpen) => !isOpen)}
-          onChange={updateMetadata}
+        <ConfigPanel metadata={metadata} onChange={updateMetadata} />
+
+        <Editor
+          text={text}
+          issues={issues}
+          selectedIssueId={selectedIssueId}
+          onTextChange={setText}
+          onSelectIssue={(issueId, position) => {
+            setSelectedIssueId(issueId);
+            setTooltipPosition(position);
+          }}
         />
-
-        <motion.section
-          className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"
-          layout
-          transition={{ duration: 0.28, ease: 'easeOut' }}
-        >
-          <Editor
-            text={text}
-            issues={issues}
-            selectedIssueId={selectedIssueId}
-            onTextChange={setText}
-            onSelectIssue={setSelectedIssueId}
-          />
-
-          <aside className="hidden lg:block">
-            <div className="sticky top-28 rounded-[2rem] border border-slate-200/80 bg-white/80 p-5 shadow-soft backdrop-blur-xl">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
-                Conseils
-              </p>
-              <h2 className="mt-2 text-xl font-black">Autocorrection</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Clique sur un passage rouge. L'indice explique la regle sans donner la reponse pour t'aider a progresser.
-              </p>
-              <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900 ring-1 ring-amber-100">
-                Niveau actuel: {metadata.classLevel}. Les indices deviennent plus precis lorsque la classe augmente.
-              </div>
-            </div>
-          </aside>
-        </motion.section>
       </div>
 
       <AnimatePresence>
@@ -134,17 +99,13 @@ export default function App() {
           <CorrectionTooltip
             key={selectedIssue.id}
             issue={selectedIssue}
+            position={tooltipPosition}
             onClose={() => setSelectedIssueId(null)}
           />
         )}
       </AnimatePresence>
 
-      <FloatingFooter
-        issueCount={issues.length}
-        wordCount={wordCount}
-        onExport={exportPdf}
-        onReset={resetDraft}
-      />
+      <FloatingFooter wordCount={wordCount} />
     </main>
   );
 }

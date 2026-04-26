@@ -18,10 +18,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(219, 234, 254, 0.75), transparent 30rem),
-    radial-gradient(circle at top right, rgba(224, 231, 255, 0.65), transparent 28rem),
-    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  background: #f8fafc;
 }
 
 button,
@@ -38,4 +35,16 @@ textarea {
 .paper-lines {
   background-image: linear-gradient(to bottom, transparent 35px, rgba(148, 163, 184, 0.14) 36px);
   background-size: 100% 32px;
+}
+
+.font-paper {
+  font-family: Lora, Georgia, "Times New Roman", serif;
+}
+
+@media (max-width: 21cm) {
+  .paper-a4 {
+    width: 95%;
+    min-height: auto;
+    padding: 2rem !important;
+  }
 }
