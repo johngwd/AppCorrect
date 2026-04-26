@@ -37,4 +37,5 @@ export type CorrectionIssue = {
   title?: string;
   message: string;
   severity: "hint" | "warning";
+  level: "primary" | "middle" | "high";
 };

@@ -28,7 +28,7 @@ export const exportAssignmentPdf = (metadata: StudentMetadata, text: string) => 
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('Mon devoir', pageWidth / 2, 58, { align: 'center' });
+  doc.text('Correcteur Academique', pageWidth / 2, 58, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
